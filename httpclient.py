@@ -41,13 +41,13 @@ class HTTPClient(object):
         return None
 
     def get_code(self, data):
-        return None
+        return int(data.split()[1])
 
     def get_headers(self,data):
-        return None
+        return data.split('\r\n\r\n')[0]
 
     def get_body(self, data):
-        return None
+        return data.split('\r\n\r\n')[1]
     
     def sendall(self, data):
         self.socket.sendall(data.encode('utf-8'))
@@ -68,13 +68,50 @@ class HTTPClient(object):
         return buffer.decode('utf-8')
 
     def GET(self, url, args=None):
-        code = 500
-        body = ""
+        parsed = urllib.parse.urlparse(url)
+        path = parsed.path if (parsed.path) else '/'
+        
+        request = (
+            'GET %s HTTP/1.1\r\n'
+            'Host: %s\r\n'
+            'Connection: close\r\n'
+            '\r\n\r\n'  % (path, parsed.hostname)
+        )
+
+        # connect, send, get response
+        port = 80 if (parsed.port == None) else parsed.port
+        self.connect(parsed.hostname, port)
+        self.sendall(request)
+        response = self.recvall(self.socket)
+
+        code = self.get_code(response)
+        body = self.get_body(response)
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
-        code = 500
-        body = ""
+        parsed = urllib.parse.urlparse(url)
+        data = urllib.parse.urlencode(args) if args else ''
+        path = parsed.path if (parsed.path) else '/'
+
+        request = (
+            'POST %s HTTP/1.1\r\n'
+            'Host: %s\r\n'
+            'Content-Type: application/x-www-form-urlencoded\r\n'
+            'Content-Length: %s\r\n'
+            '\r\n'
+            '%s\r\n'
+            'Connection: close\r\n'
+            '\r\n\r\n'  % (path, parsed.hostname, len(data), data)
+        )
+        
+        # connect, send, get response
+        port = 80 if (parsed.port == None) else parsed.port
+        self.connect(parsed.hostname, port)
+        self.sendall(request)
+        response = self.recvall(self.socket)
+
+        code = self.get_code(response)
+        body = self.get_body(response)
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):

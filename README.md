@@ -7,6 +7,12 @@ See requirements.org (plain-text) for a description of the project.
 
 Make a simple web-client like curl or wget
 
+Assignment done by Hailan Xu
+
+Reference Used
+===============
+* [Python's urllib.parse Documentation](https://docs.python.org/3/library/urllib.parse.html)
+
 Contributors / Licensing
 ========================
 
